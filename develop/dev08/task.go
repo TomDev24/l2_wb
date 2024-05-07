@@ -15,6 +15,60 @@ type shell struct {
 	commands [][]string
 }
 
+func echo(command []string) {
+	if len(command) == 1 {
+		fmt.Println()
+		return
+	}
+	fmt.Println(strings.Join(command[1:], " "))
+}
+
+func trimdata(data []string) []string {
+	commands := make([]string, 0)
+	for _, cmd := range data {
+		cmd = strings.TrimSuffix(cmd, "\n")
+		cmd = strings.TrimSuffix(cmd, "\r")
+		cmd = strings.TrimSuffix(cmd, " ")
+		cmd = strings.TrimPrefix(cmd, " ")
+		cmd = strings.TrimSpace(cmd)
+		commands = append(commands, cmd)
+	}
+	return commands
+}
+
+func trim2d(data []string) [][]string {
+	commands := [][]string{}
+
+	for _, command := range data {
+		splitted := strings.Split(command, " ")
+		cmd := trimdata(splitted)
+		commands = append(commands, cmd)
+	}
+	return commands
+}
+
+func process() {
+	processList, err := ps.Processes()
+	if err != nil {
+		fmt.Println("ps.Processes() failed, are you using windows?")
+		return
+	}
+	var process ps.Process
+	for p := range processList {
+		process = processList[p]
+		fmt.Printf("%d\t%s\n", process.Pid(), process.Executable())
+	}
+}
+
+func kill(pid int) error {
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		return err
+	}
+	process.Kill()
+	return nil
+}
+
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Starting UNIX shell")
@@ -81,59 +135,4 @@ func main() {
 			}
 		}
 	}
-
-}
-
-func echo(command []string) {
-	if len(command) == 1 {
-		fmt.Println()
-		return
-	}
-	fmt.Println(strings.Join(command[1:], " "))
-}
-
-func trimdata(data []string) []string {
-	commands := make([]string, 0)
-	for _, cmd := range data {
-		cmd = strings.TrimSuffix(cmd, "\n")
-		cmd = strings.TrimSuffix(cmd, "\r")
-		cmd = strings.TrimSuffix(cmd, " ")
-		cmd = strings.TrimPrefix(cmd, " ")
-		cmd = strings.TrimSpace(cmd)
-		commands = append(commands, cmd)
-	}
-	return commands
-}
-
-func trim2d(data []string) [][]string {
-	commands := [][]string{}
-
-	for _, command := range data {
-		splitted := strings.Split(command, " ")
-		cmd := trimdata(splitted)
-		commands = append(commands, cmd)
-	}
-	return commands
-}
-
-func process() {
-	processList, err := ps.Processes()
-	if err != nil {
-		fmt.Println("ps.Processes() failed, are you using windows?")
-		return
-	}
-	var process ps.Process
-	for p := range processList {
-		process = processList[p]
-		fmt.Printf("%d\t%s\n", process.Pid(), process.Executable())
-	}
-}
-
-func kill(pid int) error {
-	process, err := os.FindProcess(pid)
-	if err != nil {
-		return err
-	}
-	process.Kill()
-	return nil
 }
